@@ -1,0 +1,156 @@
+--== KICK LOCAL - MURILEX EDITION 😎🔥 ==--
+-- Coloque este LocalScript dentro de StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local TextChatService = game:GetService("TextChatService")
+
+--========================================================
+--== FUNÇÃO: Criar a barra de "Loaded!" com Fade =========
+--========================================================
+
+local function createLoadedBar()
+    local screen = Instance.new("ScreenGui")
+    screen.IgnoreGuiInset = true
+    screen.ResetOnSpawn = false
+    screen.Name = "LoadedBarUI"
+    screen.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0, 160, 0, 40)
+    bar.Position = UDim2.new(1, -180, 1, -60)
+    bar.BackgroundColor3 = Color3.new(0,0,0)
+    bar.BorderSizePixel = 0
+    bar.BackgroundTransparency = 1
+    bar.Parent = screen
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1,0,1,0)
+    text.BackgroundTransparency = 1
+    text.Text = "Loaded!"
+    text.TextColor3 = Color3.new(1,1,1)
+    text.TextScaled = true
+    text.Font = Enum.Font.GothamBold
+    text.TextTransparency = 1
+    text.Parent = bar
+
+    -- Fade-in 0.5 milissegundo (0.005s)
+    for i = 1, 10 do
+        bar.BackgroundTransparency = 1 - (i / 10)
+        text.TextTransparency = 1 - (i / 10)
+        task.wait(0.0005)
+    end
+
+    -- Dura 3 segundos
+    task.wait(3)
+
+    -- Fade-out 0.5 milissegundo
+    for i = 1, 10 do
+        bar.BackgroundTransparency = i / 10
+        text.TextTransparency = i / 10
+        task.wait(0.0005)
+    end
+
+    screen:Destroy()
+end
+
+-- Executa ao rodar
+task.defer(createLoadedBar)
+
+--========================================================
+--== FUNÇÃO: KICK LOCAL ==================================
+--========================================================
+
+local function freezePlayer(target)
+    if target and target.Character then
+        -- Congelar player
+        for _, part in ipairs(target.Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Anchored = true
+            end
+        end
+    end
+end
+
+local function makeInvisibleToMe(target)
+    if target and target.Character then
+        for _, part in ipairs(target.Character:GetChildren()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.LocalTransparencyModifier = 1
+            end
+        end
+    end
+end
+
+local function removeFromLeaderboard(target)
+    local gui = LocalPlayer:FindFirstChild("PlayerGui")
+    if not gui then return end
+
+    -- Remove elementos do player no leaderboard SÓ PARA VOCÊ
+    for _, screen in ipairs(gui:GetChildren()) do
+        if screen:IsA("ScreenGui") then
+            for _, obj in ipairs(screen:GetDescendants()) do
+                if obj:IsA("TextLabel") and obj.Text == target.Name then
+                    obj.Text = ""
+                end
+            end
+        end
+    end
+end
+
+local function muteChat(target)
+    -- Silenciar mensagens do player só para você
+    TextChatService.OnIncomingMessage = function(message)
+        if message.TextSource then
+            local speaker = Players:GetPlayerByUserId(message.TextSource.UserId)
+            if speaker and speaker == target then
+                return nil -- Bloqueia mensagem só pra você
+            end
+        end
+        return message
+    end
+end
+
+local function fullyKickLocal(target)
+    if not target then return end
+
+    freezePlayer(target)
+
+    task.wait(2)
+
+    makeInvisibleToMe(target)
+    removeFromLeaderboard(target)
+    muteChat(target)
+end
+
+--========================================================
+--== SISTEMA DE COMANDO ;kick ============================
+--========================================================
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.Return then
+        -- Esperar mensagem do chat
+        task.wait(0.1)
+
+        local chatBox = LocalPlayer.PlayerGui:FindFirstChild("Chat")
+        if not chatBox then return end
+    end
+end)
+
+-- Mensagens novas
+TextChatService.SendingMessage:Connect(function(message)
+    if not message.Text then return end
+
+    local text = message.Text
+
+    if string.sub(text, 1, 6):lower() == ";kick " then
+        local targetName = string.sub(text, 7)
+        local target = Players:FindFirstChild(targetName)
+
+        if target then
+            fullyKickLocal(target)
+        end
+    end
+end)
