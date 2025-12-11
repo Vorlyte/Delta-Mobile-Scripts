@@ -1,130 +1,176 @@
--- MURILEX KICK SYSTEM (NOVO + SEU SISTEMA ANTIGO ADAPTADO)
-
 local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
-local TextChatService = game:GetService("TextChatService")
 local UIS = game:GetService("UserInputService")
-
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
 
--------------------------------------------------------
--- 1. BARRINHA "Loaded!" COM FADE IN/OUT
--------------------------------------------------------
+local screen = Instance.new("ScreenGui")
+screen.Name = "KickGui"
+screen.ResetOnSpawn = false
+screen.Parent = player:WaitForChild("PlayerGui")
 
-local function showLoadedBar()
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.IgnoreGuiInset = true
-    screenGui.Parent = player:WaitForChild("PlayerGui")
+local openBtn = Instance.new("TextButton")
+openBtn.Name = "OpenButton"
+openBtn.Size = UDim2.new(0,100,0,40)
+openBtn.Position = UDim2.new(0.05,0,0.2,0)
+openBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+openBtn.TextColor3 = Color3.new(1,1,1)
+openBtn.Text = "Open"
+openBtn.Parent = screen
 
-    local bar = Instance.new("Frame")
-    bar.Size = UDim2.new(0, 180, 0, 40)
-    bar.Position = UDim2.new(1, -190, 1, -50)
-    bar.BackgroundColor3 = Color3.new(0,0,0)
-    bar.BackgroundTransparency = 1
-    bar.BorderSizePixel = 0
-    bar.Parent = screenGui
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,250,0,200)
+frame.Position = UDim2.new(0.3,0,0.3,0)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Visible = false
+frame.Parent = screen
 
-    local text = Instance.new("TextLabel")
-    text.Size = UDim2.new(1,0,1,0)
-    text.BackgroundTransparency = 1
-    text.Text = "Loaded!"
-    text.TextColor3 = Color3.new(1,1,1)
-    text.TextScaled = true
-    text.Parent = bar
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1,0,0,30)
+topBar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+topBar.Parent = frame
 
-    -- fade in (0.5 ms ≈ 0.0005s)
-    for i = 1, 0, -0.1 do
-        bar.BackgroundTransparency = i
-        task.wait(0.00005)
-    end
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,-30,1,0)
+title.Position = UDim2.new(0,10,0,0)
+title.BackgroundTransparency = 1
+title.Text = "Kick Gui" -- ALTERADO
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = topBar
 
-    task.wait(3)
+local closeX = Instance.new("TextButton")
+closeX.Size = UDim2.new(0,30,1,0)
+closeX.Position = UDim2.new(1,-30,0,0)
+closeX.BackgroundTransparency = 1
+closeX.Text = "X"
+closeX.TextColor3 = Color3.new(1,0.3,0.3)
+closeX.Font = Enum.Font.GothamBold
+closeX.Parent = topBar
 
-    -- fade out
-    for i = 0, 1, 0.1 do
-        bar.BackgroundTransparency = i
-        task.wait(0.00005)
-    end
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1,0,1,-40)
+scrollFrame.Position = UDim2.new(0,0,0,40)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
+scrollFrame.ScrollBarThickness = 10
+scrollFrame.Parent = frame
 
-    screenGui:Destroy()
+local uiList = Instance.new("UIListLayout")
+uiList.SortOrder = Enum.SortOrder.LayoutOrder
+uiList.Padding = UDim.new(0,5)
+uiList.Parent = scrollFrame
+
+local function createButton(name)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1,-20,0,35)
+	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Text = name
+	btn.Parent = scrollFrame
+	return btn
 end
 
-showLoadedBar()
+-- SOMENTE O BOTÃO DE KICK
+local kickBtn = createButton("Kick Player")
 
--------------------------------------------------------
--- 2. SISTEMA DO SEU SCRIPT ANTIGO (ADAPTADO)
--------------------------------------------------------
-
-local function fakeKick(target)
-    if not target then return end
-    local char = target.Character
-    if not char then return end
-
-    -- 1. CONGELAR
-    for _, part in ipairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Anchored = true
-        end
-    end
-
-    task.wait(2)
-
-    -- 2. SUMIR COMPLETAMENTE (TODAS PARTES + NOME + DECAL + GUI)
-    for _, obj in ipairs(char:GetDescendants()) do
-        if obj:IsA("BasePart") or obj:IsA("Decal") then
-            obj.Transparency = 1
-            if obj:IsA("BasePart") then
-                obj.CanCollide = false
-            end
-        elseif obj:IsA("BillboardGui") or obj:IsA("SurfaceGui") then
-            obj.Enabled = false
-        end
-    end
-
-    -- 3. SUMIR NOME (DisplayName e Name)
-    local hum = char:FindFirstChild("Humanoid")
-    if hum then
-        hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-    end
-
-    -- 4. REMOVER DA PLAYER LIST SÓ PRA VOCÊ
-    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
-    task.wait(0.2)
-    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, true)
-
-    -- 5. MUTEAR O CHAT DELE SÓ PARA VOCÊ
-    local connection
-    connection = TextChatService.MessageReceived:Connect(function(msg)
-        if msg.TextSource and msg.TextSource.UserId == target.UserId then
-            return nil -- ignora a mensagem
-        end
-    end)
-
-    -- 6. SUMIR DA INTERFACE DE JOGO TAMBÉM
-    local gui = target:FindFirstChild("PlayerGui")
-    if gui then
-        for _, g in ipairs(gui:GetChildren()) do
-            if g:IsA("ScreenGui") then
-                g.Enabled = false
-            end
-        end
-    end
+local function makeDraggable(guiObject)
+	local dragging = false
+	local dragStart, startPos
+	guiObject.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+		end
+	end)
+	guiObject.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
 end
 
--------------------------------------------------------
--- 3. COMANDO ;kick nome
--------------------------------------------------------
+makeDraggable(topBar)
+makeDraggable(openBtn)
 
-local function onChatted(message)
-    if message:lower():sub(1,6) == ";kick " then
-        local targetName = message:sub(7):lower()
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr.Name:lower():sub(1,#targetName) == targetName then
-                fakeKick(plr)
-                break
-            end
-        end
-    end
-end
+openBtn.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	openBtn.Visible = false
+end)
 
-player.Chatted:Connect(onChatted)
+closeX.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	openBtn.Visible = true
+end)
+
+-- TextBox para o nome
+local kickBox = Instance.new("TextBox")
+kickBox.Size = UDim2.new(1,-20,0,35)
+kickBox.Position = UDim2.new(0,10,0,0)
+kickBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
+kickBox.TextColor3 = Color3.new(1,1,1)
+kickBox.PlaceholderText = "Nome do player"
+kickBox.Visible = false
+kickBox.Parent = scrollFrame
+
+-- FUNÇÃO DE KICK VISUAL (MESMA DO SEU SCRIPT)
+kickBtn.MouseButton1Click:Connect(function()
+	if not kickBox.Visible then
+		kickBox.Visible = true
+	else
+		local targetName = kickBox.Text
+		local target = Players:FindFirstChild(targetName)
+		if target and target.Character then
+			
+			local char = target.Character
+
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Anchored = true
+				end
+			end
+
+			task.wait(2)
+
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") or part:IsA("Decal") then
+					part.Transparency = 1
+				end
+			end
+
+			if char:FindFirstChild("Humanoid") then
+				char.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+			end
+
+			pcall(function()
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if plr == target then
+						plr:Remove()
+					end
+				end
+			end)
+
+			pcall(function()
+				target:Kick("Kicked by an administrator.")
+			end)
+		end
+
+		kickBox.Visible = false
+		kickBox.Text = ""
+	end
+end)
