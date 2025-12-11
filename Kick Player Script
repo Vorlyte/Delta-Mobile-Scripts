@@ -101,7 +101,7 @@ end
 
 -- SOM DE KICK
 local kickSound = Instance.new("Sound")
-kickSound.SoundId = "rbxassetid://9118823107"
+kickSound.SoundId = "rbxassetid://96354959748895"
 kickSound.Volume = 1
 kickSound.Parent = screen
 
