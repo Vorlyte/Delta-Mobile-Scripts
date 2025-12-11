@@ -1,3 +1,162 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+
+-- GUI PRINCIPAL -------------------------------------------------------
+
+local screen = Instance.new("ScreenGui")
+screen.Name = "KickGui"
+screen.ResetOnSpawn = false
+screen.Parent = player:WaitForChild("PlayerGui")
+
+-- BOTÃO OPEN (ARREDONDADO) -------------------------------------------
+
+local openBtn = Instance.new("TextButton")
+openBtn.Name = "OpenButton"
+openBtn.Size = UDim2.new(0,100,0,40)
+openBtn.Position = UDim2.new(0.05,0,0.2,0)
+openBtn.BackgroundColor3 = Color3.fromRGB(0, 89, 255)
+openBtn.TextColor3 = Color3.new(1,1,1)
+openBtn.Font = Enum.Font.GothamBold
+openBtn.TextSize = 16
+openBtn.Text = "Open"
+openBtn.AutoButtonColor = true
+openBtn.Parent = screen
+
+local roundOpen = Instance.new("UICorner")
+roundOpen.CornerRadius = UDim.new(0,18)
+roundOpen.Parent = openBtn
+
+openBtn.BackgroundTransparency = 0.05
+
+-- MENU ----------------------------------------------------------------
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,260,0,200)
+frame.Position = UDim2.new(0.3,0,0.3,0)
+frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.Visible = false
+frame.Parent = screen
+
+local frameCorner = Instance.new("UICorner", frame)
+frameCorner.CornerRadius = UDim.new(0,14)
+
+local shadow = Instance.new("ImageLabel", frame)
+shadow.Size = UDim2.new(1,40,1,40)
+shadow.Position = UDim2.new(0,-20,0,-20)
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://6015897843"
+shadow.ImageColor3 = Color3.new(0,0,0)
+shadow.ImageTransparency = 0.5
+shadow.ZIndex = -1
+
+-- TOPO ----------------------------------------------------------------
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1,0,0,32)
+topBar.BackgroundColor3 = Color3.fromRGB(0, 55, 158)
+topBar.Parent = frame
+
+Instance.new("UICorner", topBar)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,-35,1,0)
+title.Position = UDim2.new(0,10,0,0)
+title.BackgroundTransparency = 1
+title.Text = "Kick Gui"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = topBar
+
+local closeX = Instance.new("TextButton")
+closeX.Size = UDim2.new(0,28,1,0)
+closeX.Position = UDim2.new(1,-28,0,0)
+closeX.BackgroundTransparency = 1
+closeX.Text = "X"
+closeX.TextColor3 = Color3.fromRGB(255,150,150)
+closeX.Font = Enum.Font.GothamBold
+closeX.TextSize = 18
+closeX.Parent = topBar
+
+-- SCROLL ---------------------------------------------------------------
+
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1,0,1,-40)
+scrollFrame.Position = UDim2.new(0,0,0,40)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
+scrollFrame.ScrollBarThickness = 7
+scrollFrame.Parent = frame
+
+local uiList = Instance.new("UIListLayout", scrollFrame)
+uiList.SortOrder = Enum.SortOrder.LayoutOrder
+uiList.Padding = UDim.new(0,5)
+
+-- FUNÇÕES --------------------------------------------------------------
+
+local function createButton(name)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1,-20,0,35)
+	btn.Position = UDim2.new(0,10,0,0)
+	btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 15
+	btn.Text = name
+	btn.Parent = scrollFrame
+	Instance.new("UICorner", btn)
+	return btn
+end
+
+-- SOM DE KICK
+local kickSound = Instance.new("Sound")
+kickSound.SoundId = "rbxassetid://9118823107" -- som grave de impacto
+kickSound.Volume = 1
+kickSound.Parent = screen
+
+-- BOTÃO DE KICK --------------------------------------------------------
+
+local kickBtn = createButton("Kick Player")
+
+local kickBox = Instance.new("TextBox")
+kickBox.Size = UDim2.new(1,-20,0,35)
+kickBox.Position = UDim2.new(0,10,0,0)
+kickBox.BackgroundColor3 = Color3.fromRGB(55,55,55)
+kickBox.TextColor3 = Color3.new(1,1,1)
+kickBox.PlaceholderText = "Nome do player"
+kickBox.Font = Enum.Font.Gotham
+kickBox.TextSize = 14
+kickBox.Visible = false
+kickBox.Parent = scrollFrame
+
+Instance.new("UICorner", kickBox)
+
+-- ANIMAÇÃO DE ABRIR/FECHAR --------------------------------------------
+
+local function animateFrame(open)
+	if open then
+		frame.Visible = true
+		frame.Size = UDim2.new(0,260,0,10)
+		TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Size = UDim2.new(0,260,0,200)}):Play()
+	else
+		TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Size = UDim2.new(0,260,0,10)}):Play()
+		task.wait(0.25)
+		frame.Visible = false
+	end
+end
+
+openBtn.MouseButton1Click:Connect(function()
+	openBtn.Visible = false
+	animateFrame(true)
+end)
+
+closeX.MouseButton1Click:Connect(function()
+	openBtn.Visible = true
+	animateFrame(false)
+end)
+
 kickBtn.MouseButton1Click:Connect(function()
 	if not kickBox.Visible then
 		kickBox.Visible = true
@@ -19,13 +178,14 @@ kickBtn.MouseButton1Click:Connect(function()
 
 			task.wait(2)
 
-			-- Invisível
+			-- Invisibilizar o player
 			for _, p in ipairs(char:GetDescendants()) do
 				if p:IsA("BasePart") or p:IsA("Decal") then
 					p.Transparency = 1
 				end
 			end
 
+			-- Remover nome acima da cabeça
 			if char:FindFirstChild("Humanoid") then
 				char.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 			end
@@ -37,10 +197,12 @@ kickBtn.MouseButton1Click:Connect(function()
 			pcall(function()
 				local coreGui = game:GetService("CoreGui")
 				local playerList = coreGui:FindFirstChild("PlayerList")
+
 				if playerList then
 					for _, ui in ipairs(playerList:GetDescendants()) do
 						if ui:IsA("TextLabel") and string.find(string.lower(ui.Text), string.lower(target.Name)) then
-							ui.Text = ""
+							ui.Text = ""           -- Remove o nome
+							ui.TextTransparency = 1 -- Garante sumiço visual
 						end
 					end
 				end
@@ -48,7 +210,7 @@ kickBtn.MouseButton1Click:Connect(function()
 
 			-------------------------------------------------------------------
 
-			-- Kick normal
+			-- Kick final
 			pcall(function()
 				target:Kick("Kicked by an administrator.")
 			end)
@@ -58,3 +220,34 @@ kickBtn.MouseButton1Click:Connect(function()
 		kickBox.Text = ""
 	end
 end)
+
+
+-- DRAG ---------------------------------------------------------------
+
+local function makeDraggable(gui)
+	local dragging, dragStart, startPos = false, nil, nil
+
+	gui.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+		end
+	end)
+
+	gui.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+makeDraggable(topBar)
+makeDraggable(openBtn)
