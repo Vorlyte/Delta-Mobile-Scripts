@@ -1,146 +1,130 @@
---== MURILEX VANISH SYSTEM 3.0 🔥😎 ==--
+-- MURILEX KICK SYSTEM (NOVO + SEU SISTEMA ANTIGO ADAPTADO)
 
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local TextChatService = game:GetService("TextChatService")
-local LocalPlayer = Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
 
-----------------------------------------------------------------------------------------------------
--- REMOVE O PLAYER DE TODA INTERFACE DO ROBLOX (PlayerList, Leaderboard, Canto da Tela, Etc)
-----------------------------------------------------------------------------------------------------
+local player = Players.LocalPlayer
 
-local function removeFromCoreUI(target)
-    -- Oculta TODA a PlayerList só pra você
-    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+-------------------------------------------------------
+-- 1. BARRINHA "Loaded!" COM FADE IN/OUT
+-------------------------------------------------------
 
-    -- Cria uma PlayerList fake sem o player alvo
-    task.wait(0.2)
+local function showLoadedBar()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.IgnoreGuiInset = true
+    screenGui.Parent = player:WaitForChild("PlayerGui")
 
-    local gui = Instance.new("ScreenGui")
-    gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-    gui.Name = "FakePlayerList_Murilex"
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0, 180, 0, 40)
+    bar.Position = UDim2.new(1, -190, 1, -50)
+    bar.BackgroundColor3 = Color3.new(0,0,0)
+    bar.BackgroundTransparency = 1
+    bar.BorderSizePixel = 0
+    bar.Parent = screenGui
 
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 200, 0, 300)
-    frame.Position = UDim2.new(1, -210, 0, 100)
-    frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    frame.BackgroundTransparency = 0.25
-    frame.Parent = gui
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1,0,1,0)
+    text.BackgroundTransparency = 1
+    text.Text = "Loaded!"
+    text.TextColor3 = Color3.new(1,1,1)
+    text.TextScaled = true
+    text.Parent = bar
 
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = frame
-    layout.Padding = UDim.new(0, 4)
-
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= target then
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -10, 0, 30)
-            label.BackgroundTransparency = 1
-            label.Text = plr.Name
-            label.TextColor3 = Color3.new(1,1,1)
-            label.TextScaled = true
-            label.Font = Enum.Font.Gotham
-            label.Parent = frame
-        end
+    -- fade in (0.5 ms ≈ 0.0005s)
+    for i = 1, 0, -0.1 do
+        bar.BackgroundTransparency = i
+        task.wait(0.00005)
     end
+
+    task.wait(3)
+
+    -- fade out
+    for i = 0, 1, 0.1 do
+        bar.BackgroundTransparency = i
+        task.wait(0.00005)
+    end
+
+    screenGui:Destroy()
 end
 
-----------------------------------------------------------------------------------------------------
--- REMOVE TODAS AS PARTES E NOME DO JOGADOR
-----------------------------------------------------------------------------------------------------
+showLoadedBar()
 
-local function vanishCharacter(target)
-    if not target.Character then return end
-    
-    for _, obj in ipairs(target.Character:GetDescendants()) do
-        -- remove visual total
-        if obj:IsA("BasePart") then
-            obj.Transparency = 1
-            obj.LocalTransparencyModifier = 1
-            obj.CanCollide = false
-        end
+-------------------------------------------------------
+-- 2. SISTEMA DO SEU SCRIPT ANTIGO (ADAPTADO)
+-------------------------------------------------------
 
-        if obj:IsA("Decal") then
-            obj.Transparency = 1
-        end
-
-        -- remove nome acima da cabeça
-        if obj:IsA("BillboardGui") then
-            obj.Enabled = false
-        end
-    end
-end
-
-----------------------------------------------------------------------------------------------------
--- REMOVE O PLAYER DE TODAS INTERFACES DO JOGO (GUI CRIADA PELO DEV)
-----------------------------------------------------------------------------------------------------
-
-local function hideFromAllInterfaces(target)
-    local pg = LocalPlayer:WaitForChild("PlayerGui")
-
-    for _, obj in ipairs(pg:GetDescendants()) do
-        if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-            if obj.Text == target.Name or string.find(obj.Text, target.Name) then
-                obj.Visible = false
-                obj.TextTransparency = 1
-            end
-        end
-    end
-end
-
-----------------------------------------------------------------------------------------------------
--- MUTE DO CHAT
-----------------------------------------------------------------------------------------------------
-
-local function muteTarget(target)
-    TextChatService.OnIncomingMessage = function(msg)
-        if msg.TextSource then
-            local player = Players:GetPlayerByUserId(msg.TextSource.UserId)
-            if player == target then
-                return nil -- bloqueia mensagem só pra você
-            end
-        end
-        return msg
-    end
-end
-
-----------------------------------------------------------------------------------------------------
--- KICK LOCAL COMPLETO
-----------------------------------------------------------------------------------------------------
-
-local function FULL_KICK(target)
+local function fakeKick(target)
     if not target then return end
+    local char = target.Character
+    if not char then return end
 
-    -- Congela
-    if target.Character then
-        for _, p in ipairs(target.Character:GetChildren()) do
-            if p:IsA("BasePart") then
-                p.Anchored = true
-            end
+    -- 1. CONGELAR
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Anchored = true
         end
     end
 
     task.wait(2)
 
-    vanishCharacter(target)
-    hideFromAllInterfaces(target)
-    removeFromCoreUI(target)
-    muteTarget(target)
-end
-
-----------------------------------------------------------------------------------------------------
--- COMANDO ;kick
-----------------------------------------------------------------------------------------------------
-
-TextChatService.SendingMessage:Connect(function(msg)
-    local text = msg.Text:lower()
-
-    if string.sub(text, 1, 6) == ";kick " then
-        local name = text:sub(7)
-        local target = Players:FindFirstChild(name)
-
-        if target then
-            FULL_KICK(target)
+    -- 2. SUMIR COMPLETAMENTE (TODAS PARTES + NOME + DECAL + GUI)
+    for _, obj in ipairs(char:GetDescendants()) do
+        if obj:IsA("BasePart") or obj:IsA("Decal") then
+            obj.Transparency = 1
+            if obj:IsA("BasePart") then
+                obj.CanCollide = false
+            end
+        elseif obj:IsA("BillboardGui") or obj:IsA("SurfaceGui") then
+            obj.Enabled = false
         end
     end
-end)
+
+    -- 3. SUMIR NOME (DisplayName e Name)
+    local hum = char:FindFirstChild("Humanoid")
+    if hum then
+        hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+    end
+
+    -- 4. REMOVER DA PLAYER LIST SÓ PRA VOCÊ
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+    task.wait(0.2)
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, true)
+
+    -- 5. MUTEAR O CHAT DELE SÓ PARA VOCÊ
+    local connection
+    connection = TextChatService.MessageReceived:Connect(function(msg)
+        if msg.TextSource and msg.TextSource.UserId == target.UserId then
+            return nil -- ignora a mensagem
+        end
+    end)
+
+    -- 6. SUMIR DA INTERFACE DE JOGO TAMBÉM
+    local gui = target:FindFirstChild("PlayerGui")
+    if gui then
+        for _, g in ipairs(gui:GetChildren()) do
+            if g:IsA("ScreenGui") then
+                g.Enabled = false
+            end
+        end
+    end
+end
+
+-------------------------------------------------------
+-- 3. COMANDO ;kick nome
+-------------------------------------------------------
+
+local function onChatted(message)
+    if message:lower():sub(1,6) == ";kick " then
+        local targetName = message:sub(7):lower()
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.Name:lower():sub(1,#targetName) == targetName then
+                fakeKick(plr)
+                break
+            end
+        end
+    end
+end
+
+player.Chatted:Connect(onChatted)
