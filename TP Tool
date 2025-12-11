@@ -1,31 +1,56 @@
--- TP TOOL - MURILEX EDITION 😎🔥
--- Coloque este LocalScript dentro de StarterPlayerScripts
+-- TP TOOL - GUI SAFE MODE 😎🔥
+-- Coloque este LocalScript em StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
--- Criar a Tool
+-- Criar Tool
 local tool = Instance.new("Tool")
 tool.Name = "TP Tool"
 tool.RequiresHandle = false
 tool.CanBeDropped = false
 tool.Parent = player:WaitForChild("Backpack")
 
--- Função para teleportar
+-- Função de Teleporte
 local function TeleportTo(position)
 	local character = player.Character
 	if not character then return end
 
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if root then
-		root.CFrame = CFrame.new(position + Vector3.new(0, 5, 0)) -- Teleportar um pouco acima
+		root.CFrame = CFrame.new(position + Vector3.new(0, 5, 0))
 	end
+end
+
+-- Verifica se o clique foi em um GUI
+local function ClickedOnGui()
+	local guiObjects = player.PlayerGui:GetDescendants()
+
+	for _, obj in ipairs(guiObjects) do
+		if obj:IsA("GuiObject") and obj.Visible then
+			-- Se o objeto estiver sob o ponteiro, é GUI
+			if obj:IsA("TextButton") or obj:IsA("ImageButton") or obj.Active then
+				local mousePos = UserInputService:GetMouseLocation()
+				if obj.AbsolutePosition
+					and mousePos.X >= obj.AbsolutePosition.X
+					and mousePos.X <= obj.AbsolutePosition.X + obj.AbsoluteSize.X
+					and mousePos.Y >= obj.AbsolutePosition.Y
+					and mousePos.Y <= obj.AbsolutePosition.Y + obj.AbsoluteSize.Y then
+					return true
+				end
+			end
+		end
+	end
+
+	return false
 end
 
 -- PC: Teleportar ao clicar
 tool.Activated:Connect(function()
-	-- Raycast baseado na posição do mouse
+	-- Bloqueia se clicar em GUI
+	if ClickedOnGui() then return end
+
 	local mouse = player:GetMouse()
 	local targetPos = mouse.Hit and mouse.Hit.p
 
@@ -34,13 +59,15 @@ tool.Activated:Connect(function()
 	end
 end)
 
--- MOBILE: Teleportar ao tocar na tela
-UserInputService.TouchTap:Connect(function(touchPositions, processed)
-	if not tool.Parent or tool.Parent ~= player.Character then
-		return -- só funciona se a tool estiver equipada
-	end
+-- MOBILE: Teleportar ao tocar
+UserInputService.TouchTap:Connect(function(touchPosTbl)
+	-- Tool precisa estar equipada
+	if not tool.Parent or tool.Parent ~= player.Character then return end
 
-	local pos = touchPositions[1]
+	-- Se tocou em GUI → bloquear
+	if ClickedOnGui() then return end
+
+	local pos = touchPosTbl[1]
 	local camera = workspace.CurrentCamera
 
 	local ray = camera:ScreenPointToRay(pos.X, pos.Y)
@@ -54,4 +81,3 @@ UserInputService.TouchTap:Connect(function(touchPositions, processed)
 		TeleportTo(result.Position)
 	end
 end)
-
