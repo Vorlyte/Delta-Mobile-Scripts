@@ -1,0 +1,57 @@
+-- TP TOOL - MURILEX EDITION 😎🔥
+-- Coloque este LocalScript dentro de StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- Criar a Tool
+local tool = Instance.new("Tool")
+tool.Name = "TP Tool"
+tool.RequiresHandle = false
+tool.CanBeDropped = false
+tool.Parent = player:WaitForChild("Backpack")
+
+-- Função para teleportar
+local function TeleportTo(position)
+	local character = player.Character
+	if not character then return end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if root then
+		root.CFrame = CFrame.new(position + Vector3.new(0, 5, 0)) -- Teleportar um pouco acima
+	end
+end
+
+-- PC: Teleportar ao clicar
+tool.Activated:Connect(function()
+	-- Raycast baseado na posição do mouse
+	local mouse = player:GetMouse()
+	local targetPos = mouse.Hit and mouse.Hit.p
+
+	if targetPos then
+		TeleportTo(targetPos)
+	end
+end)
+
+-- MOBILE: Teleportar ao tocar na tela
+UserInputService.TouchTap:Connect(function(touchPositions, processed)
+	if not tool.Parent or tool.Parent ~= player.Character then
+		return -- só funciona se a tool estiver equipada
+	end
+
+	local pos = touchPositions[1]
+	local camera = workspace.CurrentCamera
+
+	local ray = camera:ScreenPointToRay(pos.X, pos.Y)
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterDescendantsInstances = {player.Character}
+	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+	local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, raycastParams)
+
+	if result then
+		TeleportTo(result.Position)
+	end
+end)
+
