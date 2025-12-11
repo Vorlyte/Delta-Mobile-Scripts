@@ -1,17 +1,16 @@
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- GUI PRINCIPAL -------------------------------------------------------
-
 local screen = Instance.new("ScreenGui")
 screen.Name = "KickGui"
 screen.ResetOnSpawn = false
 screen.Parent = player:WaitForChild("PlayerGui")
 
 -- BOTÃO OPEN (ARREDONDADO) -------------------------------------------
-
 local openBtn = Instance.new("TextButton")
 openBtn.Name = "OpenButton"
 openBtn.Size = UDim2.new(0,100,0,40)
@@ -23,24 +22,19 @@ openBtn.TextSize = 16
 openBtn.Text = "Open"
 openBtn.AutoButtonColor = true
 openBtn.Parent = screen
-
 local roundOpen = Instance.new("UICorner")
 roundOpen.CornerRadius = UDim.new(0,18)
 roundOpen.Parent = openBtn
-
 openBtn.BackgroundTransparency = 0.05
 
 -- MENU ----------------------------------------------------------------
-
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,260,0,200)
 frame.Position = UDim2.new(0.3,0,0.3,0)
 frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 frame.Visible = false
 frame.Parent = screen
-
-local frameCorner = Instance.new("UICorner", frame)
-frameCorner.CornerRadius = UDim.new(0,14)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,14)
 
 local shadow = Instance.new("ImageLabel", frame)
 shadow.Size = UDim2.new(1,40,1,40)
@@ -52,12 +46,10 @@ shadow.ImageTransparency = 0.5
 shadow.ZIndex = -1
 
 -- TOPO ----------------------------------------------------------------
-
 local topBar = Instance.new("Frame")
 topBar.Size = UDim2.new(1,0,0,32)
 topBar.BackgroundColor3 = Color3.fromRGB(0, 55, 158)
 topBar.Parent = frame
-
 Instance.new("UICorner", topBar)
 
 local title = Instance.new("TextLabel")
@@ -81,7 +73,6 @@ closeX.TextSize = 18
 closeX.Parent = topBar
 
 -- SCROLL ---------------------------------------------------------------
-
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1,0,1,-40)
 scrollFrame.Position = UDim2.new(0,0,0,40)
@@ -89,13 +80,11 @@ scrollFrame.BackgroundTransparency = 1
 scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
 scrollFrame.ScrollBarThickness = 7
 scrollFrame.Parent = frame
-
 local uiList = Instance.new("UIListLayout", scrollFrame)
 uiList.SortOrder = Enum.SortOrder.LayoutOrder
 uiList.Padding = UDim.new(0,5)
 
 -- FUNÇÕES --------------------------------------------------------------
-
 local function createButton(name)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1,-20,0,35)
@@ -112,12 +101,11 @@ end
 
 -- SOM DE KICK
 local kickSound = Instance.new("Sound")
-kickSound.SoundId = "rbxassetid://9118823107" -- som grave de impacto
+kickSound.SoundId = "rbxassetid://9118823107"
 kickSound.Volume = 1
 kickSound.Parent = screen
 
 -- BOTÃO DE KICK --------------------------------------------------------
-
 local kickBtn = createButton("Kick Player")
 
 local kickBox = Instance.new("TextBox")
@@ -130,11 +118,9 @@ kickBox.Font = Enum.Font.Gotham
 kickBox.TextSize = 14
 kickBox.Visible = false
 kickBox.Parent = scrollFrame
-
 Instance.new("UICorner", kickBox)
 
 -- ANIMAÇÃO DE ABRIR/FECHAR --------------------------------------------
-
 local function animateFrame(open)
 	if open then
 		frame.Visible = true
@@ -151,82 +137,65 @@ openBtn.MouseButton1Click:Connect(function()
 	openBtn.Visible = false
 	animateFrame(true)
 end)
-
 closeX.MouseButton1Click:Connect(function()
 	openBtn.Visible = true
 	animateFrame(false)
 end)
 
+-- LÓGICA DO KICK COM VISUAL ------------------------------------------
 kickBtn.MouseButton1Click:Connect(function()
 	if not kickBox.Visible then
 		kickBox.Visible = true
 	else
 		local target = Players:FindFirstChild(kickBox.Text)
 		if target and target.Character then
-
-			-- Som
-			kickSound:Play()
-
 			local char = target.Character
 
-			-- Travar o jogador
+			-- 1. SOM
+			kickSound:Play()
+
+			-- 2. ANCORAR PARTES
 			for _, p in ipairs(char:GetDescendants()) do
 				if p:IsA("BasePart") then
 					p.Anchored = true
 				end
 			end
 
-			task.wait(2)
+			task.wait(1.5)
 
-			-- Invisibilizar o player
+			-- 3. TRANSPARENCIA
 			for _, p in ipairs(char:GetDescendants()) do
 				if p:IsA("BasePart") or p:IsA("Decal") then
 					p.Transparency = 1
 				end
 			end
-
-			-- Remover nome acima da cabeça
 			if char:FindFirstChild("Humanoid") then
 				char.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 			end
 
-			-------------------------------------------------------------------
-			-- 🔥 REMOVER O PLAYER DO PLAYER LIST (CLIENT SIDE)
-			-------------------------------------------------------------------
-
+			-- 4. REMOVER DO LEADERBOARD LOCAL
 			pcall(function()
-				local coreGui = game:GetService("CoreGui")
-				local playerList = coreGui:FindFirstChild("PlayerList")
-
-				if playerList then
-					for _, ui in ipairs(playerList:GetDescendants()) do
-						if ui:IsA("TextLabel") and string.find(string.lower(ui.Text), string.lower(target.Name)) then
-							ui.Text = ""           -- Remove o nome
-							ui.TextTransparency = 1 -- Garante sumiço visual
-						end
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if plr == target then
+						plr:Remove()
 					end
 				end
 			end)
 
-			-------------------------------------------------------------------
-
-			-- Kick final
+			-- 5. TENTAR KICK SERVER-SIDE
 			pcall(function()
 				target:Kick("Kicked by an administrator.")
 			end)
-		end
 
-		kickBox.Visible = false
-		kickBox.Text = ""
+			kickBox.Visible = false
+			kickBox.Text = ""
+		end
 	end
 end)
 
-
 -- DRAG ---------------------------------------------------------------
-
 local function makeDraggable(gui)
 	local dragging, dragStart, startPos = false, nil, nil
-
 	gui.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
@@ -234,13 +203,11 @@ local function makeDraggable(gui)
 			startPos = frame.Position
 		end
 	end)
-
 	gui.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = false
 		end
 	end)
-
 	UIS.InputChanged:Connect(function(input)
 		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 			local delta = input.Position - dragStart
